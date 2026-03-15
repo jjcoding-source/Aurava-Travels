@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ToursPage from './pages/ToursPage'
 import TourDetailPage from './pages/TourDetailPage'
+import DestinationsPage from './pages/DestinationsPage'
+import DestinationDetailPage from './pages/DestinationDetailPage'
 import BookingPage from './pages/BookingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
 import MyBookingsPage from './pages/MyBookingsPage'
@@ -17,9 +19,9 @@ import CustomersPage from './pages/admin/CustomersPage'
 import LeadsPage from './pages/admin/LeadsPage'
 import ReportsPage from './pages/admin/ReportsPage'
 import AgentDashboardPage from './pages/agent/AgentDashboardPage'
+import AgentLeadsPage from './pages/agent/AgentLeadsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
-import AgentLeadsPage from './pages/agent/AgentLeadsPage'
 
 function App() {
   return (
@@ -30,7 +32,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/tours" element={<ToursPage />} />
         <Route path="/tours/:id" element={<TourDetailPage />} />
-        <Route path="/destinations" element={<div className="p-8 text-center">Destinations — coming soon</div>} />
+        <Route path="/destinations" element={<DestinationsPage />} />
+        <Route path="/destinations/:id" element={<DestinationDetailPage />} />
         <Route path="/about" element={<div className="p-8 text-center">About — coming soon</div>} />
         <Route path="/contact" element={<div className="p-8 text-center">Contact — coming soon</div>} />
         <Route
@@ -88,10 +91,10 @@ function App() {
           <ProtectedRoute allowedRoles={['agent']}>
             <AgentLayout />
           </ProtectedRoute>
-       }
-    >
-       <Route index element={<AgentDashboardPage />} />
-       <Route path="leads" element={<AgentLeadsPage />} />
+        }
+      >
+        <Route index element={<AgentDashboardPage />} />
+        <Route path="leads" element={<AgentLeadsPage />} />
       </Route>
 
       {/* 404 */}
