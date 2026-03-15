@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
 import AdminLayout from './layouts/AdminLayout'
+import AgentLayout from './layouts/AgentLayout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -15,6 +16,7 @@ import BookingsManagementPage from './pages/admin/BookingsManagementPage'
 import CustomersPage from './pages/admin/CustomersPage'
 import LeadsPage from './pages/admin/LeadsPage'
 import ReportsPage from './pages/admin/ReportsPage'
+import AgentDashboardPage from './pages/agent/AgentDashboardPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
@@ -76,6 +78,19 @@ function App() {
         <Route path="leads" element={<LeadsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<div className="p-4 text-slate-500 text-sm">Settings — coming soon</div>} />
+      </Route>
+
+      {/* Agent pages */}
+      <Route
+        path="/agent"
+        element={
+          <ProtectedRoute allowedRoles={['agent']}>
+            <AgentLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AgentDashboardPage />} />
+        <Route path="leads" element={<div className="p-4 text-slate-500 text-sm">My Leads — coming soon</div>} />
       </Route>
 
       {/* 404 */}
