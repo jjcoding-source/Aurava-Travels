@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import connectDB from './config/db.js'
 import errorHandler from './middleware/errorHandler.js'
+import authRoutes from './routes/auth.routes.js'
 
 dotenv.config()
 connectDB()
@@ -16,7 +17,6 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-
 app.get('/', (req, res) => {
   res.json({
     success: true,
@@ -25,6 +25,7 @@ app.get('/', (req, res) => {
   })
 })
 
+app.use('/api/auth', authRoutes)
 
 app.use(errorHandler)
 
