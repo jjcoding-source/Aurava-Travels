@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ToursPage from './pages/ToursPage'
+import TourDetailPage from './pages/TourDetailPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
@@ -15,6 +16,7 @@ function App() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/tours" element={<ToursPage />} />
+        <Route path="/tours/:id" element={<TourDetailPage />} />
         <Route path="/destinations" element={<div className="p-8 text-center">Destinations — coming soon</div>} />
         <Route path="/about" element={<div className="p-8 text-center">About — coming soon</div>} />
         <Route path="/contact" element={<div className="p-8 text-center">Contact — coming soon</div>} />
@@ -42,3 +44,4 @@ function App() {
 }
 
 export default App
+
