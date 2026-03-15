@@ -6,6 +6,9 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ToursPage from './pages/ToursPage'
 import TourDetailPage from './pages/TourDetailPage'
+import BookingPage from './pages/BookingPage'
+import BookingSuccessPage from './pages/BookingSuccessPage'
+import MyBookingsPage from './pages/MyBookingsPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import LeadsPage from './pages/admin/LeadsPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -23,6 +26,32 @@ function App() {
         <Route path="/destinations" element={<div className="p-8 text-center">Destinations — coming soon</div>} />
         <Route path="/about" element={<div className="p-8 text-center">About — coming soon</div>} />
         <Route path="/contact" element={<div className="p-8 text-center">Contact — coming soon</div>} />
+
+        {/* Protected customer pages */}
+        <Route
+          path="/booking/:id"
+          element={
+            <ProtectedRoute>
+              <BookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking-success/:id"
+          element={
+            <ProtectedRoute>
+              <BookingSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute>
+              <MyBookingsPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       {/* Auth pages */}

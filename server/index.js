@@ -5,6 +5,7 @@ import connectDB from './config/db.js'
 import errorHandler from './middleware/errorHandler.js'
 import authRoutes from './routes/auth.routes.js'
 import tourRoutes from './routes/tour.routes.js'
+import bookingRoutes from './routes/booking.routes.js'
 
 dotenv.config()
 connectDB()
@@ -28,6 +29,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/tours', tourRoutes)
+app.use('/api/bookings', bookingRoutes)
 
 app.use(errorHandler)
 
