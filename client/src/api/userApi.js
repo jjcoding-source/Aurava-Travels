@@ -9,3 +9,8 @@ export const toggleUserStatus = async (id) => {
   const response = await axiosInstance.put(`/auth/users/${id}/toggle`)
   return response.data
 }
+
+export const createAgent = async (agentData) => {
+  const response = await axiosInstance.post('/auth/agents', agentData)
+  return response.data
+}

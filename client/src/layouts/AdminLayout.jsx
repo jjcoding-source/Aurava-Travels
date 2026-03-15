@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import {
   LayoutDashboard, Map, CalendarCheck, Users,
   Target, BarChart2, Settings, LogOut,
-  Menu, X, Plane, ChevronDown,
+  Menu, X, Plane, ChevronDown, Users2,
 } from 'lucide-react'
 import { logout } from '../store/authSlice'
 import toast from 'react-hot-toast'
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
       { label: 'Tour Packages', path: '/admin/tours', icon: Map },
       { label: 'Bookings', path: '/admin/bookings', icon: CalendarCheck },
       { label: 'Customers', path: '/admin/customers', icon: Users },
+      { label: 'Agents', path: '/admin/agents', icon: Users2 },
     ],
   },
   {

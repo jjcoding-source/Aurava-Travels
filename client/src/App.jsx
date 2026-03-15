@@ -24,6 +24,7 @@ import AgentDashboardPage from './pages/agent/AgentDashboardPage'
 import AgentLeadsPage from './pages/agent/AgentLeadsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
+import AgentsPage from './pages/admin/AgentsPage'
 
 function App() {
   return (
@@ -69,22 +70,23 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
 
       {/* Admin pages */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="tours" element={<ToursManagementPage />} />
-        <Route path="bookings" element={<BookingsManagementPage />} />
-        <Route path="customers" element={<CustomersPage />} />
-        <Route path="leads" element={<LeadsPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="settings" element={<div className="p-4 text-slate-500 text-sm">Settings — coming soon</div>} />
-      </Route>
+<Route
+  path="/admin"
+  element={
+    <ProtectedRoute allowedRoles={['admin']}>
+      <AdminLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route index element={<DashboardPage />} />
+  <Route path="tours" element={<ToursManagementPage />} />
+  <Route path="bookings" element={<BookingsManagementPage />} />
+  <Route path="customers" element={<CustomersPage />} />
+  <Route path="agents" element={<AgentsPage />} />
+  <Route path="leads" element={<LeadsPage />} />
+  <Route path="reports" element={<ReportsPage />} />
+  <Route path="settings" element={<div className="p-4 text-slate-500 text-sm">Settings — coming soon</div>} />
+</Route>
 
       {/* Agent pages */}
       <Route

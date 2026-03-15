@@ -236,3 +236,38 @@ export const toggleUserStatus = asyncHandler(async (req, res) => {
     },
   })
 })
+
+
+export const createAgent = asyncHandler(async (req, res) => {
+  const { name, email, phone, password } = req.body
+
+  if (!name || !email || !password) {
+    res.status(400)
+    throw new Error('Please provide name, email and password')
+  }
+
+  const userExists = await User.findOne({ email })
+  if (userExists) {
+    res.status(400)
+    throw new Error('User with this email already exists')
+  }
+
+  const agent = await User.create({
+    name,
+    email,
+    phone,
+    password,
+    role: 'agent',
+  })
+
+  res.status(201).json({
+    success: true,
+    user: {
+      _id: agent._id,
+      name: agent.name,
+      email: agent.email,
+      phone: agent.phone,
+      role: agent.role,
+    },
+  })
+})
