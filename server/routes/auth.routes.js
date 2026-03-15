@@ -5,8 +5,10 @@ import {
   getUserProfile,
   updateUserProfile,
   seedDemoUsers,
+  getAllUsers,
+  toggleUserStatus,
 } from '../controllers/auth.controller.js'
-import { protect } from '../middleware/authMiddleware.js'
+import { protect, adminOnly } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
@@ -16,5 +18,8 @@ router.post('/seed', seedDemoUsers)
 
 router.get('/profile', protect, getUserProfile)
 router.put('/profile', protect, updateUserProfile)
+
+router.get('/users', protect, adminOnly, getAllUsers)
+router.put('/users/:id/toggle', protect, adminOnly, toggleUserStatus)
 
 export default router

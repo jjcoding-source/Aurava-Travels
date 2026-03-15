@@ -12,6 +12,7 @@ import MyBookingsPage from './pages/MyBookingsPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import ToursManagementPage from './pages/admin/ToursManagementPage'
 import BookingsManagementPage from './pages/admin/BookingsManagementPage'
+import CustomersPage from './pages/admin/CustomersPage'
 import LeadsPage from './pages/admin/LeadsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
@@ -70,7 +71,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="tours" element={<ToursManagementPage />} />
         <Route path="bookings" element={<BookingsManagementPage />} />
-        <Route path="customers" element={<div className="p-4 text-slate-500 text-sm">Customers — coming soon</div>} />
+        <Route path="customers" element={<CustomersPage />} />
         <Route path="leads" element={<LeadsPage />} />
         <Route path="reports" element={<div className="p-4 text-slate-500 text-sm">Reports — coming soon</div>} />
         <Route path="settings" element={<div className="p-4 text-slate-500 text-sm">Settings — coming soon</div>} />

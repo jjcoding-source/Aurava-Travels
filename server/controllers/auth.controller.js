@@ -179,3 +179,60 @@ export const seedDemoUsers = asyncHandler(async (req, res) => {
     ],
   })
 })
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, role, search } = req.query
+
+  const filter = {}
+  if (role) filter.role = role
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+    ]
+  }
+
+  const total = await User.countDocuments(filter)
+  const users = await User.find(filter)
+    .select('-password')
+    .sort({ createdAt: -1 })
+    .skip((Number(page) - 1) * Number(limit))
+    .limit(Number(limit))
+
+  res.json({
+    success: true,
+    total,
+    page: Number(page),
+    pages: Math.ceil(total / Number(limit)),
+    users,
+  })
+})
+
+export const toggleUserStatus = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id)
+
+  if (!user) {
+    res.status(404)
+    throw new Error('User not found')
+  }
+
+  if (user.role === 'admin') {
+    res.status(400)
+    throw new Error('Cannot deactivate admin account')
+  }
+
+  user.isActive = !user.isActive
+  await user.save()
+
+  res.json({
+    success: true,
+    message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+    },
+  })
+})
