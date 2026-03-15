@@ -1,101 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Plus, Search, X, Phone, Mail,
   MapPin, Calendar, User, ChevronDown,
   Flame, Loader2,
 } from 'lucide-react'
-
-// ── Data ─────────────────────────────────────────────────────────────────────
-const INITIAL_LEADS = {
-  new: [
-    {
-      id: 'l1', name: 'Nisha Gupta', email: 'nisha@email.com',
-      phone: '9876543210', destination: 'Dubai', month: 'Sep 2025',
-      budget: '1.2L', source: 'WhatsApp', agent: 'RK', isHot: false,
-      notes: 'Interested in 5-day package',
-    },
-    {
-      id: 'l2', name: 'Suresh Pillai', email: 'suresh@email.com',
-      phone: '9823456781', destination: 'Singapore', month: 'Oct 2025',
-      budget: '1.5L', source: 'Facebook Ad', agent: 'PV', isHot: false,
-      notes: 'Family trip with 2 kids',
-    },
-    {
-      id: 'l3', name: 'Meera Joshi', email: 'meera@email.com',
-      phone: '9012345678', destination: 'Europe', month: 'Dec 2025',
-      budget: '2L', source: 'Website', agent: 'RK', isHot: false,
-      notes: 'First international trip',
-    },
-  ],
-  contacted: [
-    {
-      id: 'l4', name: 'Divya Menon', email: 'divya@email.com',
-      phone: '9345678901', destination: 'Japan', month: 'Mar 2026',
-      budget: '2.5L', source: 'Phone', agent: 'PV', isHot: true,
-      notes: 'Couple trip for anniversary',
-    },
-    {
-      id: 'l5', name: 'Kiran Bhat', email: 'kiran@email.com',
-      phone: '9456789012', destination: 'Switzerland', month: 'Jan 2026',
-      budget: '2L', source: 'WhatsApp', agent: 'RK', isHot: false,
-      notes: 'Honeymoon package inquiry',
-    },
-    {
-      id: 'l6', name: 'Tarun Singh', email: 'tarun@email.com',
-      phone: '9567890123', destination: 'Maldives', month: 'Feb 2026',
-      budget: '1.8L', source: 'Instagram', agent: 'PV', isHot: false,
-      notes: 'Solo traveller',
-    },
-  ],
-  interested: [
-    {
-      id: 'l7', name: 'Ankit Sharma', email: 'ankit@email.com',
-      phone: '9678901234', destination: 'Europe', month: 'Sep 2025',
-      budget: '2.5L', source: 'Referral', agent: 'PV', isHot: true,
-      notes: 'Group of 4 friends',
-    },
-    {
-      id: 'l8', name: 'Rohan Das', email: 'rohan@email.com',
-      phone: '9789012345', destination: 'Switzerland', month: 'Aug 2025',
-      budget: '2L', source: 'Referral', agent: 'RK', isHot: false,
-      notes: 'Solo trip planned',
-    },
-  ],
-  booked: [
-    {
-      id: 'l9', name: 'Saurabh Jain', email: 'saurabh@email.com',
-      phone: '9890123456', destination: 'Maldives', month: 'Jul 2025',
-      budget: '3.2L', source: 'Website', agent: 'PV', isHot: false,
-      notes: 'Paid in full',
-    },
-    {
-      id: 'l10', name: 'Rahul Sharma', email: 'rahul@email.com',
-      phone: '9901234567', destination: 'Europe', month: 'Jun 2025',
-      budget: '5L', source: 'Referral', agent: 'PV', isHot: false,
-      notes: 'Departure confirmed 15 Jun',
-    },
-    {
-      id: 'l11', name: 'Priya & Aditya', email: 'priya@email.com',
-      phone: '9012345679', destination: 'Bali', month: 'Aug 2025',
-      budget: '1.7L', source: 'Instagram', agent: 'RK', isHot: false,
-      notes: 'Honeymoon package booked',
-    },
-  ],
-  lost: [
-    {
-      id: 'l12', name: 'Vijay Kumar', email: 'vijay@email.com',
-      phone: '9123456780', destination: 'Europe', month: 'Jun 2025',
-      budget: '2L', source: 'Website', agent: 'RK', isHot: false,
-      notes: 'Said too expensive',
-    },
-    {
-      id: 'l13', name: 'Geeta Mishra', email: 'geeta@email.com',
-      phone: '9234567891', destination: 'Japan', month: 'Aug 2025',
-      budget: '2.2L', source: 'Facebook', agent: 'PV', isHot: false,
-      notes: 'Booked with another agency',
-    },
-  ],
-}
+import { getAllLeads, createLead, updateLead } from '../../api/leadApi'
+import toast from 'react-hot-toast'
 
 const COLUMNS = [
   { key: 'new', label: 'New', color: 'bg-slate-400' },
@@ -105,21 +15,15 @@ const COLUMNS = [
   { key: 'lost', label: 'Lost', color: 'bg-red-400' },
 ]
 
-const AGENTS = [
-  { value: '', label: 'All agents' },
-  { value: 'RK', label: 'Ravi Kumar (RK)' },
-  { value: 'PV', label: 'Priya V (PV)' },
-]
-
 const SOURCE_OPTIONS = [
-  'Website', 'WhatsApp', 'Phone', 'Facebook Ad',
-  'Instagram', 'Referral', 'Other',
+  'Website', 'WhatsApp', 'Phone',
+  'Facebook Ad', 'Instagram', 'Referral', 'Other',
 ]
 
 const EMPTY_FORM = {
   name: '', email: '', phone: '',
   destination: '', month: '', budget: '',
-  source: 'Website', agent: 'RK', notes: '',
+  source: 'Website', agent: '', notes: '',
 }
 
 const Field = ({
@@ -150,9 +54,11 @@ const Field = ({
 
 
 const LeadsPage = () => {
-  const [leads, setLeads] = useState(INITIAL_LEADS)
+  const [leads, setLeads] = useState({
+    new: [], contacted: [], interested: [], booked: [], lost: [],
+  })
+  const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [agentFilter, setAgentFilter] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedLead, setSelectedLead] = useState(null)
   const [selectedLeadCol, setSelectedLeadCol] = useState(null)
@@ -163,30 +69,49 @@ const LeadsPage = () => {
   const [dragFromCol, setDragFromCol] = useState(null)
   const [dragOverCol, setDragOverCol] = useState(null)
 
+  // Fetch leads 
+  const fetchLeads = async () => {
+    try {
+      setIsLoading(true)
+      const params = {}
+      if (search) params.search = search
+      const data = await getAllLeads(params)
+      setLeads(data.grouped)
+    } catch (error) {
+      toast.error('Failed to load leads')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchLeads()
+  }, [])
+
   const totalLeads = Object.values(leads).flat().length
-  const bookedCount = leads.booked.length
-  const conversionRate = Math.round((bookedCount / totalLeads) * 100)
+  const bookedCount = leads.booked?.length || 0
+  const conversionRate = totalLeads > 0
+    ? Math.round((bookedCount / totalLeads) * 100)
+    : 0
   const pipelineValue = Object.values(leads)
     .flat()
     .filter((l) => l.budget)
     .reduce((sum, l) => {
-      const val = parseFloat(l.budget.replace('L', '')) || 0
+      const val = parseFloat(l.budget?.replace('L', '')) || 0
       return sum + val
     }, 0)
     .toFixed(1)
 
-  const filterLeads = (colLeads) => {
-    return colLeads.filter((lead) => {
-      const matchSearch =
-        !search ||
-        lead.name.toLowerCase().includes(search.toLowerCase()) ||
-        lead.destination.toLowerCase().includes(search.toLowerCase())
-      const matchAgent = !agentFilter || lead.agent === agentFilter
-      return matchSearch && matchAgent
-    })
+  // Filter leads 
+  const filterLeads = (colLeads = []) => {
+    if (!search) return colLeads
+    return colLeads.filter((lead) =>
+      lead.name.toLowerCase().includes(search.toLowerCase()) ||
+      lead.destination.toLowerCase().includes(search.toLowerCase())
+    )
   }
 
-  // ── Drag and drop ───────────────────────────────────────────
+  // Drag and drop 
   const handleDragStart = (lead, colKey) => {
     setDraggedLead(lead)
     setDragFromCol(colKey)
@@ -197,7 +122,7 @@ const LeadsPage = () => {
     setDragOverCol(colKey)
   }
 
-  const handleDrop = (e, toCol) => {
+  const handleDrop = async (e, toCol) => {
     e.preventDefault()
     if (!draggedLead || dragFromCol === toCol) {
       setDraggedLead(null)
@@ -205,29 +130,65 @@ const LeadsPage = () => {
       setDragOverCol(null)
       return
     }
+
+   
     setLeads((prev) => {
-      const fromLeads = prev[dragFromCol].filter((l) => l.id !== draggedLead.id)
-      const toLeads = [...prev[toCol], { ...draggedLead }]
+      const fromLeads = prev[dragFromCol].filter((l) => l._id !== draggedLead._id)
+      const toLeads = [...prev[toCol], { ...draggedLead, status: toCol }]
       return { ...prev, [dragFromCol]: fromLeads, [toCol]: toLeads }
     })
+
+   
+    try {
+      await updateLead(draggedLead._id, { status: toCol })
+    } catch (error) {
+      toast.error('Failed to update lead status')
+      fetchLeads()
+    }
+
     setDraggedLead(null)
     setDragFromCol(null)
     setDragOverCol(null)
   }
 
-  // ── Move lead via modal ─────────────────────────────────────
-  const handleMoveLeadTo = (newStatus) => {
-    if (!selectedLead || !selectedLeadCol) return
-    if (selectedLeadCol === newStatus) return
+  // Move lead via modal 
+  const handleMoveLeadTo = async (newStatus) => {
+    if (!selectedLead || selectedLeadCol === newStatus) return
+
     setLeads((prev) => {
-      const fromLeads = prev[selectedLeadCol].filter((l) => l.id !== selectedLead.id)
-      const toLeads = [...prev[newStatus], { ...selectedLead }]
+      const fromLeads = prev[selectedLeadCol].filter((l) => l._id !== selectedLead._id)
+      const toLeads = [...prev[newStatus], { ...selectedLead, status: newStatus }]
       return { ...prev, [selectedLeadCol]: fromLeads, [newStatus]: toLeads }
     })
     setSelectedLeadCol(newStatus)
+
+    try {
+      await updateLead(selectedLead._id, { status: newStatus })
+      toast.success('Lead moved successfully')
+    } catch (error) {
+      toast.error('Failed to update lead')
+      fetchLeads()
+    }
   }
 
-  // ── Add lead ────────────────────────────────────────────────
+  // Toggle hot
+  const toggleHot = async (colKey, lead) => {
+    const newIsHot = !lead.isHot
+    setLeads((prev) => ({
+      ...prev,
+      [colKey]: prev[colKey].map((l) =>
+        l._id === lead._id ? { ...l, isHot: newIsHot } : l
+      ),
+    }))
+    try {
+      await updateLead(lead._id, { isHot: newIsHot })
+    } catch (error) {
+      toast.error('Failed to update lead')
+      fetchLeads()
+    }
+  }
+
+  //  Validate form 
   const validateForm = () => {
     const errors = {}
     if (!formData.name.trim()) errors.name = 'Name is required'
@@ -238,20 +199,25 @@ const LeadsPage = () => {
     return Object.keys(errors).length === 0
   }
 
+  // Add lead 
   const handleAddLead = async () => {
     if (!validateForm()) return
     setIsSaving(true)
-    await new Promise((r) => setTimeout(r, 600))
-    const newLead = {
-      ...formData,
-      id: `l${Date.now()}`,
-      isHot: false,
+    try {
+      const data = await createLead(formData)
+      setLeads((prev) => ({
+        ...prev,
+        new: [data.lead, ...prev.new],
+      }))
+      setFormData(EMPTY_FORM)
+      setFormErrors({})
+      setShowAddModal(false)
+      toast.success('Lead added successfully')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add lead')
+    } finally {
+      setIsSaving(false)
     }
-    setLeads((prev) => ({ ...prev, new: [newLead, ...prev.new] }))
-    setFormData(EMPTY_FORM)
-    setFormErrors({})
-    setShowAddModal(false)
-    setIsSaving(false)
   }
 
   const handleFormChange = (e) => {
@@ -262,14 +228,19 @@ const LeadsPage = () => {
     }
   }
 
-  // ── Toggle hot ──────────────────────────────────────────────
-  const toggleHot = (colKey, leadId) => {
-    setLeads((prev) => ({
-      ...prev,
-      [colKey]: prev[colKey].map((l) =>
-        l.id === leadId ? { ...l, isHot: !l.isHot } : l
-      ),
-    }))
+  const handleSearch = (e) => {
+    setSearch(e.target.value)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex items-center gap-3 text-slate-500">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Loading leads...</span>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -289,24 +260,16 @@ const LeadsPage = () => {
               type="text"
               placeholder="Search leads..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearch}
               className="w-full sm:w-48 pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-brand-700 bg-white"
             />
           </div>
-
-          <div className="relative">
-            <select
-              value={agentFilter}
-              onChange={(e) => setAgentFilter(e.target.value)}
-              className="pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-brand-700 bg-white appearance-none cursor-pointer"
-            >
-              {AGENTS.map((a) => (
-                <option key={a.value} value={a.value}>{a.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-          </div>
-
+          <button
+            onClick={fetchLeads}
+            className="px-3 py-2 text-sm border border-slate-200 rounded-xl text-slate-600 hover:border-brand-700 bg-white transition-colors"
+          >
+            Refresh
+          </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-1.5 bg-brand-700 hover:bg-brand-800 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors flex-shrink-0"
@@ -317,7 +280,7 @@ const LeadsPage = () => {
         </div>
       </div>
 
-      {/* ── Kanban board ─────────────────────────────────────── */}
+      {/*  Kanban board */}
       <div className="flex gap-4 overflow-x-auto pb-4">
         {COLUMNS.map((col) => {
           const colLeads = filterLeads(leads[col.key])
@@ -342,16 +305,14 @@ const LeadsPage = () => {
                 </span>
               </div>
 
-              <div
-                className={`min-h-32 rounded-2xl p-2 space-y-2 transition-colors ${
-                  isDragTarget
-                    ? 'bg-brand-50 border-2 border-dashed border-brand-300'
-                    : 'bg-slate-100'
-                }`}
-              >
+              <div className={`min-h-32 rounded-2xl p-2 space-y-2 transition-colors ${
+                isDragTarget
+                  ? 'bg-brand-50 border-2 border-dashed border-brand-300'
+                  : 'bg-slate-100'
+              }`}>
                 {colLeads.map((lead) => (
                   <div
-                    key={lead.id}
+                    key={lead._id}
                     draggable
                     onDragStart={() => handleDragStart(lead, col.key)}
                     onClick={() => {
@@ -371,7 +332,7 @@ const LeadsPage = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          toggleHot(col.key, lead.id)
+                          toggleHot(col.key, lead)
                         }}
                         className={`flex-shrink-0 transition-opacity ${
                           lead.isHot ? 'opacity-100' : 'opacity-20 hover:opacity-60'
@@ -402,12 +363,12 @@ const LeadsPage = () => {
                     <div className="flex items-center justify-between">
                       <div className="w-6 h-6 bg-brand-50 rounded-full flex items-center justify-center">
                         <span className="text-xs font-medium text-brand-700">
-                          {lead.agent}
+                          {lead.assignedAgent?.name?.charAt(0) || 'A'}
                         </span>
                       </div>
-                      {lead.notes && (
+                      {lead.notes?.length > 0 && (
                         <p className="text-xs text-slate-400 truncate max-w-28">
-                          {lead.notes}
+                          {lead.notes[lead.notes.length - 1]?.text}
                         </p>
                       )}
                     </div>
@@ -425,7 +386,7 @@ const LeadsPage = () => {
         })}
       </div>
 
-      {/* ── Summary bar ──────────────────────────────────────── */}
+      {/*  Summary bar */}
       <div className="bg-white rounded-2xl border border-slate-100 px-5 py-3 flex flex-wrap items-center gap-6">
         {[
           { label: 'Total leads', value: totalLeads },
@@ -440,7 +401,7 @@ const LeadsPage = () => {
         ))}
       </div>
 
-      {/* ── Lead detail modal ─────────────────────────────────── */}
+      {/* Lead detail modal */}
       {selectedLead && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -492,7 +453,9 @@ const LeadsPage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <User className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-600">Agent: {selectedLead.agent}</span>
+                  <span className="text-xs text-slate-600">
+                    Agent: {selectedLead.assignedAgent?.name || 'Unassigned'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-slate-400">Budget:</span>
@@ -500,10 +463,12 @@ const LeadsPage = () => {
                 </div>
               </div>
 
-              {selectedLead.notes && (
+              {selectedLead.notes?.length > 0 && (
                 <div className="bg-slate-50 rounded-xl p-3">
-                  <p className="text-xs text-slate-500 mb-1 font-medium">Notes</p>
-                  <p className="text-xs text-slate-600">{selectedLead.notes}</p>
+                  <p className="text-xs text-slate-500 mb-1 font-medium">Latest note</p>
+                  <p className="text-xs text-slate-600">
+                    {selectedLead.notes[selectedLead.notes.length - 1]?.text}
+                  </p>
                 </div>
               )}
 
@@ -541,7 +506,7 @@ const LeadsPage = () => {
         </div>
       )}
 
-      {/* ── Add lead modal ────────────────────────────────────── */}
+      {/* Add lead modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -560,7 +525,6 @@ const LeadsPage = () => {
             </div>
 
             <div className="p-5 space-y-4">
-
               <Field
                 label="Full name" name="name"
                 placeholder="Rahul Sharma" required
@@ -620,33 +584,6 @@ const LeadsPage = () => {
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                  Assign agent
-                </label>
-                <div className="flex gap-2">
-                  {[
-                    { value: 'RK', label: 'Ravi Kumar' },
-                    { value: 'PV', label: 'Priya V' },
-                  ].map((agent) => (
-                    <button
-                      key={agent.value}
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, agent: agent.value }))
-                      }
-                      className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-colors ${
-                        formData.agent === agent.value
-                          ? 'bg-brand-700 text-white border-brand-700'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-brand-700'
-                      }`}
-                    >
-                      {agent.label}
-                    </button>
-                  ))}
                 </div>
               </div>
 
