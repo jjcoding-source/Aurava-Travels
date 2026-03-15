@@ -6,121 +6,11 @@ import {
 } from 'lucide-react'
 import TourCard from '../components/common/TourCard'
 import TourCardSkeleton from '../components/common/TourCardSkeleton'
-
-//Mock Data
-const ALL_TOURS = [
-  {
-    _id: '1',
-    title: 'Europe Grand Tour',
-    countries: ['France', 'Switzerland', 'Italy'],
-    duration: 10,
-    price: 250000,
-    seatsAvailable: 12,
-    rating: 4.9,
-    reviewCount: 128,
-    badge: 'Selling Fast',
-    category: 'europe',
-  },
-  {
-    _id: '2',
-    title: 'Bali Bliss Escape',
-    countries: ['Ubud', 'Seminyak', 'Nusa Dua'],
-    duration: 7,
-    price: 85000,
-    seatsAvailable: 22,
-    rating: 4.8,
-    reviewCount: 96,
-    badge: null,
-    category: 'asia',
-  },
-  {
-    _id: '3',
-    title: 'Dubai Luxury Getaway',
-    countries: ['Downtown', 'Desert Safari', 'Marina'],
-    duration: 5,
-    price: 110000,
-    seatsAvailable: 32,
-    rating: 4.7,
-    reviewCount: 74,
-    badge: 'New',
-    category: 'middleeast',
-  },
-  {
-    _id: '4',
-    title: 'Swiss Alps Adventure',
-    countries: ['Zurich', 'Interlaken', 'Geneva'],
-    duration: 8,
-    price: 190000,
-    seatsAvailable: 8,
-    rating: 4.9,
-    reviewCount: 103,
-    badge: null,
-    category: 'europe',
-  },
-  {
-    _id: '5',
-    title: 'Japan Cherry Blossom',
-    countries: ['Tokyo', 'Kyoto', 'Osaka'],
-    duration: 12,
-    price: 220000,
-    seatsAvailable: 18,
-    rating: 5.0,
-    reviewCount: 61,
-    badge: 'Popular',
-    category: 'asia',
-  },
-  {
-    _id: '6',
-    title: 'Maldives Honeymoon',
-    countries: ['North Male Atoll', 'Baa Atoll'],
-    duration: 6,
-    price: 160000,
-    seatsAvailable: 10,
-    rating: 4.8,
-    reviewCount: 88,
-    badge: null,
-    category: 'honeymoon',
-  },
-  {
-    _id: '7',
-    title: 'Thailand Explorer',
-    countries: ['Bangkok', 'Chiang Mai', 'Phuket'],
-    duration: 8,
-    price: 95000,
-    seatsAvailable: 25,
-    rating: 4.6,
-    reviewCount: 112,
-    badge: null,
-    category: 'asia',
-  },
-  {
-    _id: '8',
-    title: 'Singapore City Break',
-    countries: ['Marina Bay', 'Sentosa', 'Clarke Quay'],
-    duration: 5,
-    price: 75000,
-    seatsAvailable: 30,
-    rating: 4.5,
-    reviewCount: 67,
-    badge: null,
-    category: 'asia',
-  },
-  {
-    _id: '9',
-    title: 'Paris Romance Getaway',
-    countries: ['Paris', 'Versailles'],
-    duration: 6,
-    price: 175000,
-    seatsAvailable: 14,
-    rating: 4.8,
-    reviewCount: 92,
-    badge: null,
-    category: 'europe',
-  },
-]
+import { getAllTours } from '../api/tourApi'
+import toast from 'react-hot-toast'
 
 const SORT_OPTIONS = [
-  { label: 'Most Popular', value: 'popular' },
+  { label: 'Most Popular', value: '' },
   { label: 'Price: Low to High', value: 'price_asc' },
   { label: 'Price: High to Low', value: 'price_desc' },
   { label: 'Duration: Short First', value: 'duration_asc' },
@@ -145,92 +35,56 @@ const CATEGORY_OPTIONS = [
 
 const TOURS_PER_PAGE = 6
 
-
 const ToursPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [isLoading, setIsLoading] = useState(false)
+  const [tours, setTours] = useState([])
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortBy, setSortBy] = useState('')
 
   const [filters, setFilters] = useState({
     search: searchParams.get('destination') || '',
     category: searchParams.get('category') || '',
     duration: searchParams.get('duration') || '',
     maxPrice: searchParams.get('maxPrice') || '',
-    minRating: searchParams.get('minRating') || '',
+    minRating: '',
   })
-  const [sortBy, setSortBy] = useState('popular')
 
-  
+  // Fetch tours from API 
   useEffect(() => {
-    setIsLoading(true)
-    const timer = setTimeout(() => setIsLoading(false), 500)
-    return () => clearTimeout(timer)
-  }, [filters, sortBy])
+    const fetchTours = async () => {
+      try {
+        setIsLoading(true)
+        const params = {
+          page: currentPage,
+          limit: TOURS_PER_PAGE,
+        }
+        if (filters.search) params.destination = filters.search
+        if (filters.category) params.category = filters.category
+        if (filters.duration) params.duration = filters.duration
+        if (filters.maxPrice) params.maxPrice = filters.maxPrice
+        if (filters.minRating) params.minRating = filters.minRating
+        if (sortBy) params.sort = sortBy
 
- 
+        const data = await getAllTours(params)
+        setTours(data.tours)
+        setTotal(data.total)
+        setTotalPages(data.pages)
+      } catch (error) {
+        toast.error('Failed to load tours')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchTours()
+  }, [filters, sortBy, currentPage])
+
   useEffect(() => {
     setCurrentPage(1)
   }, [filters, sortBy])
-
-  const filteredAndSorted = useMemo(() => {
-    let result = [...ALL_TOURS]
-
-    if (filters.search) {
-      const q = filters.search.toLowerCase()
-      result = result.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) ||
-          t.countries.some((c) => c.toLowerCase().includes(q))
-      )
-    }
-
-    if (filters.category) {
-      result = result.filter((t) => t.category === filters.category)
-    }
-
-    if (filters.duration) {
-      const max = parseInt(filters.duration)
-      if (max === 5) result = result.filter((t) => t.duration <= 5)
-      else if (max === 8) result = result.filter((t) => t.duration >= 6 && t.duration <= 8)
-      else if (max === 12) result = result.filter((t) => t.duration >= 9 && t.duration <= 12)
-      else if (max === 99) result = result.filter((t) => t.duration >= 13)
-    }
-
-    if (filters.maxPrice) {
-      result = result.filter((t) => t.price <= parseInt(filters.maxPrice))
-    }
- 
-    if (filters.minRating) {
-      result = result.filter((t) => t.rating >= parseFloat(filters.minRating))
-    }
-
-    switch (sortBy) {
-      case 'price_asc':
-        result.sort((a, b) => a.price - b.price)
-        break
-      case 'price_desc':
-        result.sort((a, b) => b.price - a.price)
-        break
-      case 'duration_asc':
-        result.sort((a, b) => a.duration - b.duration)
-        break
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating)
-        break
-      default:
-        result.sort((a, b) => b.reviewCount - a.reviewCount)
-    }
-
-    return result
-  }, [filters, sortBy])
-
-  // ── Pagination ────────────────────────────────────────────────
-  const totalPages = Math.ceil(filteredAndSorted.length / TOURS_PER_PAGE)
-  const paginatedTours = filteredAndSorted.slice(
-    (currentPage - 1) * TOURS_PER_PAGE,
-    currentPage * TOURS_PER_PAGE
-  )
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -245,13 +99,14 @@ const ToursPage = () => {
       minRating: '',
     })
     setSearchParams({})
+    setSortBy('')
   }
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length
 
+  //Filter Sidebar 
   const FilterSidebar = () => (
     <div className="space-y-6">
-
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-slate-800">Filters</h3>
         {activeFilterCount > 0 && (
@@ -370,14 +225,13 @@ const ToursPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-
       <div className="bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-medium text-slate-800 mb-1">
             All Tour Packages
           </h1>
           <p className="text-sm text-slate-500">
-            Discover {ALL_TOURS.length}+ curated tours across the world
+            Discover our curated tours across the world
           </p>
         </div>
       </div>
@@ -385,6 +239,7 @@ const ToursPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
 
+          {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-56 flex-shrink-0">
             <div className="bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
               <FilterSidebar />
@@ -392,10 +247,8 @@ const ToursPage = () => {
           </aside>
 
           <div className="flex-1 min-w-0">
-
             <div className="flex items-center justify-between mb-6 gap-4">
               <div className="flex items-center gap-3">
-
                 <button
                   onClick={() => setShowMobileFilters(true)}
                   className="lg:hidden flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 hover:border-brand-700"
@@ -408,17 +261,12 @@ const ToursPage = () => {
                     </span>
                   )}
                 </button>
-
-                {/* Results count */}
                 <p className="text-sm text-slate-500">
-                  <span className="font-medium text-slate-800">
-                    {filteredAndSorted.length}
-                  </span>{' '}
-                  {filteredAndSorted.length === 1 ? 'tour' : 'tours'} found
+                  <span className="font-medium text-slate-800">{total}</span>{' '}
+                  {total === 1 ? 'tour' : 'tours'} found
                 </p>
               </div>
 
-              {/* Sort dropdown */}
               <div className="flex items-center gap-2">
                 <ArrowUpDown className="w-4 h-4 text-slate-400" />
                 <select
@@ -446,10 +294,7 @@ const ToursPage = () => {
                       className="inline-flex items-center gap-1 px-3 py-1 bg-brand-50 text-brand-700 text-xs font-medium rounded-full border border-brand-200"
                     >
                       {value}
-                      <button
-                        onClick={() => handleFilterChange(key, '')}
-                        className="hover:text-brand-900"
-                      >
+                      <button onClick={() => handleFilterChange(key, '')}>
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -468,10 +313,8 @@ const ToursPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {isLoading
                 ? Array(6).fill(0).map((_, i) => <TourCardSkeleton key={i} />)
-                : paginatedTours.length > 0
-                ? paginatedTours.map((tour) => (
-                    <TourCard key={tour._id} tour={tour} />
-                  ))
+                : tours.length > 0
+                ? tours.map((tour) => <TourCard key={tour._id} tour={tour} />)
                 : (
                   <div className="col-span-3 text-center py-20">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -504,7 +347,6 @@ const ToursPage = () => {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
@@ -518,7 +360,6 @@ const ToursPage = () => {
                     {page}
                   </button>
                 ))}
-
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
@@ -556,7 +397,7 @@ const ToursPage = () => {
                 onClick={() => setShowMobileFilters(false)}
                 className="w-full bg-brand-700 text-white py-2.5 rounded-xl text-sm font-medium"
               >
-                Show {filteredAndSorted.length} tours
+                Show {total} tours
               </button>
             </div>
           </div>

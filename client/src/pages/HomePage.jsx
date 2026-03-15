@@ -1,96 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search,
-  MapPin,
-  Clock,
-  Shield,
-  Headphones,
-  CreditCard,
-  Star,
-  ChevronRight,
-  Plane,
+  Search, MapPin, Clock, Shield,
+  Headphones, CreditCard, Star,
+  ChevronRight, Plane,
 } from 'lucide-react'
 import TourCard from '../components/common/TourCard'
 import TourCardSkeleton from '../components/common/TourCardSkeleton'
-
-const MOCK_TOURS = [
-  {
-    _id: '1',
-    title: 'Europe Grand Tour',
-    countries: ['France', 'Switzerland', 'Italy'],
-    duration: 10,
-    price: 250000,
-    seatsAvailable: 12,
-    rating: 4.9,
-    reviewCount: 128,
-    badge: 'Selling Fast',
-  },
-  {
-    _id: '2',
-    title: 'Bali Bliss Escape',
-    countries: ['Ubud', 'Seminyak', 'Nusa Dua'],
-    duration: 7,
-    price: 85000,
-    seatsAvailable: 22,
-    rating: 4.8,
-    reviewCount: 96,
-    badge: null,
-  },
-  {
-    _id: '3',
-    title: 'Dubai Luxury Getaway',
-    countries: ['Downtown', 'Desert Safari', 'Marina'],
-    duration: 5,
-    price: 110000,
-    seatsAvailable: 32,
-    rating: 4.7,
-    reviewCount: 74,
-    badge: 'New',
-  },
-  {
-    _id: '4',
-    title: 'Swiss Alps Adventure',
-    countries: ['Zurich', 'Interlaken', 'Geneva'],
-    duration: 8,
-    price: 190000,
-    seatsAvailable: 8,
-    rating: 4.9,
-    reviewCount: 103,
-    badge: null,
-  },
-  {
-    _id: '5',
-    title: 'Japan Cherry Blossom',
-    countries: ['Tokyo', 'Kyoto', 'Osaka'],
-    duration: 12,
-    price: 220000,
-    seatsAvailable: 18,
-    rating: 5.0,
-    reviewCount: 61,
-    badge: 'Popular',
-  },
-  {
-    _id: '6',
-    title: 'Maldives Honeymoon',
-    countries: ['North Male Atoll', 'Baa Atoll'],
-    duration: 6,
-    price: 160000,
-    seatsAvailable: 10,
-    rating: 4.8,
-    reviewCount: 88,
-    badge: null,
-  },
-]
+import { getAllTours } from '../api/tourApi'
+import toast from 'react-hot-toast'
 
 const FILTER_PILLS = [
-  { label: 'All', value: 'all' },
+  { label: 'All', value: '' },
   { label: 'Europe', value: 'europe' },
   { label: 'Asia', value: 'asia' },
   { label: 'Middle East', value: 'middleeast' },
   { label: 'Honeymoon', value: 'honeymoon' },
   { label: 'Adventure', value: 'adventure' },
-  { label: 'Budget Picks', value: 'budget' },
 ]
 
 const WHY_ITEMS = [
@@ -131,15 +57,32 @@ const STATS = [
   { value: '500+', label: 'Tour packages' },
 ]
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 const HomePage = () => {
-  const [activeFilter, setActiveFilter] = useState('all')
+  const [activeFilter, setActiveFilter] = useState('')
   const [searchDestination, setSearchDestination] = useState('')
   const [searchDuration, setSearchDuration] = useState('')
   const [searchBudget, setSearchBudget] = useState('')
-  const [isLoading] = useState(false)
+  const [tours, setTours] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
+
+  // Fetch tours from API 
+  useEffect(() => {
+    const fetchTours = async () => {
+      try {
+        setIsLoading(true)
+        const params = {}
+        if (activeFilter) params.category = activeFilter
+        const data = await getAllTours({ ...params, limit: 6 })
+        setTours(data.tours)
+      } catch (error) {
+        toast.error('Failed to load tours')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchTours()
+  }, [activeFilter])
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -152,37 +95,6 @@ const HomePage = () => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSearch()
   }
-
-  const filteredTours = MOCK_TOURS.filter((tour) => {
-    if (activeFilter === 'all') return true
-    if (activeFilter === 'europe') {
-      return tour.countries.some((c) =>
-        ['France', 'Switzerland', 'Italy', 'Zurich', 'Interlaken', 'Geneva'].includes(c)
-      )
-    }
-    if (activeFilter === 'asia') {
-      return tour.countries.some((c) =>
-        ['Tokyo', 'Kyoto', 'Osaka', 'Ubud', 'Seminyak', 'Nusa Dua'].includes(c)
-      )
-    }
-    if (activeFilter === 'middleeast') {
-      return tour.countries.some((c) =>
-        ['Downtown', 'Desert Safari', 'Marina'].includes(c)
-      )
-    }
-    if (activeFilter === 'honeymoon') {
-      return tour.title.toLowerCase().includes('honeymoon') ||
-        tour.title.toLowerCase().includes('maldives')
-    }
-    if (activeFilter === 'adventure') {
-      return tour.title.toLowerCase().includes('adventure') ||
-        tour.title.toLowerCase().includes('alps')
-    }
-    if (activeFilter === 'budget') {
-      return tour.price <= 100000
-    }
-    return true
-  })
 
   return (
     <div className="min-h-screen">
@@ -207,7 +119,6 @@ const HomePage = () => {
           </p>
 
           <div className="bg-white rounded-2xl p-2 flex flex-col sm:flex-row gap-2 max-w-3xl mx-auto shadow-2xl">
- 
             <div className="flex-1 flex items-center gap-2 px-3 py-2">
               <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
               <div className="flex-1 text-left">
@@ -289,8 +200,8 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* ── Tour Packages Section ─────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-medium text-slate-800">
@@ -309,6 +220,7 @@ const HomePage = () => {
           </button>
         </div>
 
+        {/* Filter pills */}
         <div className="flex items-center gap-2 flex-wrap mb-8">
           {FILTER_PILLS.map((pill) => (
             <button
@@ -325,18 +237,19 @@ const HomePage = () => {
           ))}
         </div>
 
+        {/* Tour cards grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading
             ? Array(6).fill(0).map((_, i) => <TourCardSkeleton key={i} />)
-            : filteredTours.length > 0
-            ? filteredTours.map((tour) => <TourCard key={tour._id} tour={tour} />)
+            : tours.length > 0
+            ? tours.map((tour) => <TourCard key={tour._id} tour={tour} />)
             : (
               <div className="col-span-3 text-center py-16">
                 <p className="text-slate-400 text-sm">
                   No tours found for this filter.
                 </p>
                 <button
-                  onClick={() => setActiveFilter('all')}
+                  onClick={() => setActiveFilter('')}
                   className="mt-3 text-sm text-brand-700 hover:underline"
                 >
                   Clear filter
@@ -367,7 +280,6 @@ const HomePage = () => {
               We take care of everything so you just enjoy the journey
             </p>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {WHY_ITEMS.map((item) => {
               const Icon = item.icon
@@ -416,7 +328,6 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-
     </div>
   )
 }
