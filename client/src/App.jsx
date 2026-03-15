@@ -9,6 +9,8 @@ import ToursPage from './pages/ToursPage'
 import TourDetailPage from './pages/TourDetailPage'
 import DestinationsPage from './pages/DestinationsPage'
 import DestinationDetailPage from './pages/DestinationDetailPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
 import BookingPage from './pages/BookingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
 import MyBookingsPage from './pages/MyBookingsPage'
@@ -34,8 +36,8 @@ function App() {
         <Route path="/tours/:id" element={<TourDetailPage />} />
         <Route path="/destinations" element={<DestinationsPage />} />
         <Route path="/destinations/:id" element={<DestinationDetailPage />} />
-        <Route path="/about" element={<div className="p-8 text-center">About — coming soon</div>} />
-        <Route path="/contact" element={<div className="p-8 text-center">Contact — coming soon</div>} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route
           path="/booking/:id"
           element={
