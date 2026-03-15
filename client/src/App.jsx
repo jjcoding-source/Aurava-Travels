@@ -10,6 +10,7 @@ import BookingPage from './pages/BookingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import DashboardPage from './pages/admin/DashboardPage'
+import ToursManagementPage from './pages/admin/ToursManagementPage'
 import LeadsPage from './pages/admin/LeadsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
@@ -68,7 +69,7 @@ function App() {
         }
       >
         <Route index element={<DashboardPage />} />
-        <Route path="tours" element={<div className="p-4 text-slate-500 text-sm">Tour management — coming soon</div>} />
+        <Route path="tours" element={<ToursManagementPage />} />
         <Route path="bookings" element={<div className="p-4 text-slate-500 text-sm">Bookings — coming soon</div>} />
         <Route path="customers" element={<div className="p-4 text-slate-500 text-sm">Customers — coming soon</div>} />
         <Route path="leads" element={<LeadsPage />} />
