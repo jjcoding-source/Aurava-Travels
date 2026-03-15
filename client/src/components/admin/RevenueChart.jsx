@@ -3,17 +3,6 @@ import {
   Tooltip, ResponsiveContainer,
 } from 'recharts'
 
-const data = [
-  { month: 'Jan', revenue: 12 },
-  { month: 'Feb', revenue: 15 },
-  { month: 'Mar', revenue: 18 },
-  { month: 'Apr', revenue: 14 },
-  { month: 'May', revenue: 21 },
-  { month: 'Jun', revenue: 25 },
-  { month: 'Jul', revenue: 22 },
-  { month: 'Aug', revenue: 28 },
-]
-
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -28,7 +17,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
-const RevenueChart = () => {
+const RevenueChart = ({ data = [], trend = '' }) => {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5">
       <div className="flex items-center justify-between mb-5">
@@ -36,13 +25,13 @@ const RevenueChart = () => {
           <h3 className="text-sm font-medium text-slate-800">
             Monthly revenue
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            In lakhs (₹)
-          </p>
+          <p className="text-xs text-slate-400 mt-0.5">In lakhs (₹)</p>
         </div>
-        <span className="text-xs bg-green-50 text-green-700 font-medium px-2.5 py-1 rounded-lg">
-          +18% this month
-        </span>
+        {trend && (
+          <span className="text-xs bg-green-50 text-green-700 font-medium px-2.5 py-1 rounded-lg">
+            {trend}
+          </span>
+        )}
       </div>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart
@@ -50,7 +39,11 @@ const RevenueChart = () => {
           margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
           barSize={28}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#f1f5f9"
+            vertical={false}
+          />
           <XAxis
             dataKey="month"
             tick={{ fontSize: 11, fill: '#94a3b8' }}
@@ -63,7 +56,10 @@ const RevenueChart = () => {
             tickLine={false}
             tickFormatter={(v) => `₹${v}L`}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: '#f8fafc' }}
+          />
           <Bar
             dataKey="revenue"
             fill="#1A3050"

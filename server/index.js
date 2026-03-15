@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.routes.js'
 import tourRoutes from './routes/tour.routes.js'
 import bookingRoutes from './routes/booking.routes.js'
 import leadRoutes from './routes/lead.routes.js'
+import analyticsRoutes from './routes/analytics.routes.js'
 
 dotenv.config()
 connectDB()
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/tours', tourRoutes)
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/leads', leadRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
 app.use(errorHandler)
 
