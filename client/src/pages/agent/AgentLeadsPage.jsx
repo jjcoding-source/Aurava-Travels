@@ -5,7 +5,7 @@ import {
   X, Loader2, Plus, Clock,
   Filter,
 } from 'lucide-react'
-import { getAllLeads, updateLead } from '../../api/leadApi'
+import { getAllLeads, updateLead, createLead } from '../../api/leadApi'
 import toast from 'react-hot-toast'
 
 const STATUS_OPTIONS = [
@@ -14,6 +14,11 @@ const STATUS_OPTIONS = [
   { value: 'interested', label: 'Interested', color: 'bg-amber-50 text-amber-700' },
   { value: 'booked', label: 'Booked', color: 'bg-green-50 text-green-700' },
   { value: 'lost', label: 'Lost', color: 'bg-red-50 text-red-600' },
+]
+
+const SOURCE_OPTIONS = [
+  'Website', 'WhatsApp', 'Phone',
+  'Facebook Ad', 'Instagram', 'Referral', 'Other',
 ]
 
 const SOURCE_COLORS = {
@@ -26,6 +31,12 @@ const SOURCE_COLORS = {
   Other: 'bg-slate-100 text-slate-600',
 }
 
+const EMPTY_FORM = {
+  name: '', email: '', phone: '',
+  destination: '', month: '', budget: '',
+  source: 'Website', notes: '',
+}
+
 const NoteInput = ({ value, onChange }) => (
   <textarea
     value={value}
@@ -34,6 +45,33 @@ const NoteInput = ({ value, onChange }) => (
     rows={3}
     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-brand-700 resize-none"
   />
+)
+
+const FormField = ({
+  label, name, type = 'text',
+  placeholder, required,
+  value, onChange, errors,
+}) => (
+  <div>
+    <label className="block text-xs font-medium text-slate-600 mb-1.5">
+      {label} {required && <span className="text-red-400">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-colors ${
+        errors && errors[name]
+          ? 'border-red-400 focus:border-red-500'
+          : 'border-slate-200 focus:border-brand-700'
+      }`}
+    />
+    {errors && errors[name] && (
+      <p className="mt-1 text-xs text-red-500">{errors[name]}</p>
+    )}
+  </div>
 )
 
 
@@ -47,6 +85,12 @@ const AgentLeadsPage = () => {
   const [isAddingNote, setIsAddingNote] = useState(false)
   const [updatingId, setUpdatingId] = useState(null)
   const [followUpDate, setFollowUpDate] = useState('')
+
+  // Add lead modal state 
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [formErrors, setFormErrors] = useState({})
+  const [isSaving, setIsSaving] = useState(false)
 
   // Fetch leads 
   const fetchLeads = async () => {
@@ -85,7 +129,7 @@ const AgentLeadsPage = () => {
     followUp: leads.filter((l) => l.followUpDate).length,
   }
 
-  //  Update lead status 
+  // Update lead status 
   const handleStatusChange = async (leadId, newStatus) => {
     setUpdatingId(leadId)
     try {
@@ -106,6 +150,7 @@ const AgentLeadsPage = () => {
     }
   }
 
+  // Toggle hot
   const handleToggleHot = async (lead) => {
     const newIsHot = !lead.isHot
     setLeads((prev) =>
@@ -124,6 +169,7 @@ const AgentLeadsPage = () => {
     }
   }
 
+  // Add note 
   const handleAddNote = async () => {
     if (!noteText.trim()) return
     setIsAddingNote(true)
@@ -142,6 +188,7 @@ const AgentLeadsPage = () => {
     }
   }
 
+  //  Set follow up date 
   const handleSetFollowUp = async () => {
     if (!followUpDate) return
     try {
@@ -167,6 +214,44 @@ const AgentLeadsPage = () => {
     )
   }
 
+  // Validate add lead form
+  const validateForm = () => {
+    const errors = {}
+    if (!formData.name.trim()) errors.name = 'Name is required'
+    if (!formData.email.trim()) errors.email = 'Email is required'
+    if (!formData.destination.trim()) errors.destination = 'Destination is required'
+    if (!formData.month.trim()) errors.month = 'Travel month is required'
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  //  Handle form change 
+  const handleFormChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  // Submit add lead 
+  const handleAddLead = async () => {
+    if (!validateForm()) return
+    setIsSaving(true)
+    try {
+      const data = await createLead(formData)
+      setLeads((prev) => [data.lead, ...prev])
+      setFormData(EMPTY_FORM)
+      setFormErrors({})
+      setShowAddModal(false)
+      toast.success('Lead added successfully')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add lead')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const getStatusStyle = (status) => {
     return STATUS_OPTIONS.find((s) => s.value === status)?.color ||
       'bg-slate-100 text-slate-600'
@@ -175,11 +260,21 @@ const AgentLeadsPage = () => {
   return (
     <div className="space-y-5">
 
-      <div>
-        <h1 className="text-xl font-medium text-slate-800">My Leads</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Manage your assigned leads
-        </p>
+      {/* Page heading */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-medium text-slate-800">My Leads</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Manage your assigned leads
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-1.5 bg-brand-700 hover:bg-brand-800 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add lead
+        </button>
       </div>
 
       {/* Stats bar */}
@@ -202,7 +297,7 @@ const AgentLeadsPage = () => {
         ))}
       </div>
 
-      {/*Toolbar */}
+      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
@@ -214,8 +309,6 @@ const AgentLeadsPage = () => {
             className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-brand-700 bg-white"
           />
         </div>
-
-        {/* Status filter */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1 text-xs text-slate-500">
             <Filter className="w-3.5 h-3.5" />
@@ -243,7 +336,7 @@ const AgentLeadsPage = () => {
         </div>
       </div>
 
-      {/* Leads table  */}
+      {/* Leads table*/}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -254,34 +347,26 @@ const AgentLeadsPage = () => {
           </div>
         ) : filteredLeads.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-sm text-slate-400">No leads found</p>
+            <p className="text-sm text-slate-400 mb-3">No leads found</p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="text-sm text-brand-700 font-medium hover:underline"
+            >
+              Add your first lead
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left text-xs text-slate-500 font-medium px-5 py-3">
-                    Lead
-                  </th>
-                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">
-                    Destination
-                  </th>
-                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">
-                    Budget
-                  </th>
-                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">
-                    Source
-                  </th>
-                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">
-                    Status
-                  </th>
-                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">
-                    Follow up
-                  </th>
-                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">
-                    Actions
-                  </th>
+                  <th className="text-left text-xs text-slate-500 font-medium px-5 py-3">Lead</th>
+                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">Destination</th>
+                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">Budget</th>
+                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">Source</th>
+                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">Status</th>
+                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">Follow up</th>
+                  <th className="text-left text-xs text-slate-500 font-medium px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -291,7 +376,6 @@ const AgentLeadsPage = () => {
                     className="hover:bg-slate-50 transition-colors cursor-pointer"
                     onClick={() => handleOpenLead(lead)}
                   >
-                    {/* Lead */}
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-brand-50 rounded-full flex items-center justify-center flex-shrink-0">
@@ -315,28 +399,18 @@ const AgentLeadsPage = () => {
                         </div>
                       </div>
                     </td>
-
-                    {/* Destination */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-slate-400" />
-                        <span className="text-xs text-slate-700">
-                          {lead.destination}
-                        </span>
+                        <span className="text-xs text-slate-700">{lead.destination}</span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {lead.month}
-                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">{lead.month}</p>
                     </td>
-
-                    {/* Budget */}
                     <td className="px-4 py-3">
                       <span className="text-xs font-medium text-slate-700">
                         {lead.budget ? `₹${lead.budget}` : '—'}
                       </span>
                     </td>
-
-                    {/* Source */}
                     <td className="px-4 py-3">
                       <span className={`text-xs font-medium px-2 py-1 rounded-lg ${
                         SOURCE_COLORS[lead.source] || 'bg-slate-100 text-slate-600'
@@ -344,8 +418,6 @@ const AgentLeadsPage = () => {
                         {lead.source}
                       </span>
                     </td>
-
-                    {/* Status dropdown */}
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="relative">
                         <select
@@ -365,16 +437,13 @@ const AgentLeadsPage = () => {
                         <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60" />
                       </div>
                     </td>
-
-                    {/* Follow up */}
                     <td className="px-4 py-3">
                       {lead.followUpDate ? (
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3 text-amber-500" />
                           <span className="text-xs text-amber-600 font-medium">
                             {new Date(lead.followUpDate).toLocaleDateString('en-IN', {
-                              day: 'numeric',
-                              month: 'short',
+                              day: 'numeric', month: 'short',
                             })}
                           </span>
                         </div>
@@ -382,8 +451,6 @@ const AgentLeadsPage = () => {
                         <span className="text-xs text-slate-300">Not set</span>
                       )}
                     </td>
-
-                    {/* Actions */}
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-2">
                         <button
@@ -393,7 +460,6 @@ const AgentLeadsPage = () => {
                               ? 'bg-red-50 text-red-500'
                               : 'text-slate-300 hover:text-red-400 hover:bg-red-50'
                           }`}
-                          title={lead.isHot ? 'Remove hot' : 'Mark hot'}
                         >
                           <Flame className="w-3.5 h-3.5" />
                         </button>
@@ -413,7 +479,7 @@ const AgentLeadsPage = () => {
         )}
       </div>
 
-      {/* Lead detail modal */}
+      {/* Lead detail modal  */}
       {selectedLead && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -421,8 +487,6 @@ const AgentLeadsPage = () => {
             onClick={() => setSelectedLead(null)}
           />
           <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg z-10 max-h-screen overflow-y-auto">
-
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-brand-50 rounded-full flex items-center justify-center">
@@ -453,8 +517,6 @@ const AgentLeadsPage = () => {
             </div>
 
             <div className="p-5 space-y-5">
-
-              {/* Contact info */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2.5">
                   <Phone className="w-3.5 h-3.5 text-slate-400" />
@@ -482,30 +544,27 @@ const AgentLeadsPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                    Status
-                  </label>
-                  <div className="flex gap-2 flex-wrap">
-                    {STATUS_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => handleStatusChange(selectedLead._id, opt.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                          selectedLead.status === opt.value
-                            ? 'bg-brand-700 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                  Status
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {STATUS_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleStatusChange(selectedLead._id, opt.value)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        selectedLead.status === opt.value
+                          ? 'bg-brand-700 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Follow up date */}
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
                   Follow up date
@@ -527,7 +586,6 @@ const AgentLeadsPage = () => {
                 </div>
               </div>
 
-              {/* Notes history */}
               {selectedLead.notes?.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-2">
@@ -535,17 +593,10 @@ const AgentLeadsPage = () => {
                   </label>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {[...selectedLead.notes].reverse().map((note, i) => (
-                      <div
-                        key={i}
-                        className="bg-slate-50 rounded-xl px-3 py-2.5"
-                      >
-                        <p className="text-xs text-slate-700 mb-1">
-                          {note.text}
-                        </p>
+                      <div key={i} className="bg-slate-50 rounded-xl px-3 py-2.5">
+                        <p className="text-xs text-slate-700 mb-1">{note.text}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">
-                            {note.addedBy}
-                          </span>
+                          <span className="text-xs text-slate-400">{note.addedBy}</span>
                           <span className="text-xs text-slate-400">
                             {note.addedAt
                               ? new Date(note.addedAt).toLocaleDateString('en-IN')
@@ -571,14 +622,151 @@ const AgentLeadsPage = () => {
                   disabled={!noteText.trim() || isAddingNote}
                   className="mt-2 flex items-center gap-1.5 px-3 py-2 bg-brand-700 hover:bg-brand-800 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors"
                 >
-                  {isAddingNote ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Plus className="w-3.5 h-3.5" />
-                  )}
+                  {isAddingNote
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Plus className="w-3.5 h-3.5" />
+                  }
                   Add note
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add lead modal  */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowAddModal(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md z-10 max-h-screen overflow-y-auto">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 sticky top-0 bg-white">
+              <h2 className="text-sm font-medium text-slate-800">
+                Add new lead
+              </h2>
+              <button
+                onClick={() => {
+                  setShowAddModal(false)
+                  setFormData(EMPTY_FORM)
+                  setFormErrors({})
+                }}
+                className="p-1.5 rounded-lg hover:bg-slate-100"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-5 space-y-4">
+              <FormField
+                label="Full name" name="name"
+                placeholder="Rahul Sharma" required
+                value={formData.name}
+                onChange={handleFormChange}
+                errors={formErrors}
+              />
+              <FormField
+                label="Email" name="email"
+                type="email" placeholder="rahul@email.com" required
+                value={formData.email}
+                onChange={handleFormChange}
+                errors={formErrors}
+              />
+              <FormField
+                label="Phone" name="phone"
+                type="tel" placeholder="10-digit mobile number"
+                value={formData.phone}
+                onChange={handleFormChange}
+                errors={formErrors}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  label="Destination" name="destination"
+                  placeholder="Europe, Bali..." required
+                  value={formData.destination}
+                  onChange={handleFormChange}
+                  errors={formErrors}
+                />
+                <FormField
+                  label="Travel month" name="month"
+                  placeholder="Sep 2025" required
+                  value={formData.month}
+                  onChange={handleFormChange}
+                  errors={formErrors}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  label="Budget (e.g. 2.5L)" name="budget"
+                  placeholder="2.5L"
+                  value={formData.budget}
+                  onChange={handleFormChange}
+                  errors={formErrors}
+                />
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                    Lead source
+                  </label>
+                  <select
+                    name="source"
+                    value={formData.source}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-brand-700"
+                  >
+                    {SOURCE_OPTIONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                  Notes
+                </label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleFormChange}
+                  placeholder="Any initial notes about this lead..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-brand-700 resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-4 border-t border-slate-100 flex justify-end gap-2 sticky bottom-0 bg-white">
+              <button
+                onClick={() => {
+                  setShowAddModal(false)
+                  setFormData(EMPTY_FORM)
+                  setFormErrors({})
+                }}
+                className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddLead}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-2 bg-brand-700 hover:bg-brand-800 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    Add lead
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
