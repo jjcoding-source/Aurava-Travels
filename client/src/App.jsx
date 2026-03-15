@@ -14,6 +14,7 @@ import ToursManagementPage from './pages/admin/ToursManagementPage'
 import BookingsManagementPage from './pages/admin/BookingsManagementPage'
 import CustomersPage from './pages/admin/CustomersPage'
 import LeadsPage from './pages/admin/LeadsPage'
+import ReportsPage from './pages/admin/ReportsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
@@ -73,7 +74,7 @@ function App() {
         <Route path="bookings" element={<BookingsManagementPage />} />
         <Route path="customers" element={<CustomersPage />} />
         <Route path="leads" element={<LeadsPage />} />
-        <Route path="reports" element={<div className="p-4 text-slate-500 text-sm">Reports — coming soon</div>} />
+        <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<div className="p-4 text-slate-500 text-sm">Settings — coming soon</div>} />
       </Route>
 
