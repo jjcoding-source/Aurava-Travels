@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage'
 import ToursPage from './pages/ToursPage'
 import TourDetailPage from './pages/TourDetailPage'
 import DashboardPage from './pages/admin/DashboardPage'
+import LeadsPage from './pages/admin/LeadsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
@@ -14,7 +15,7 @@ function App() {
   return (
     <Routes>
 
-      {/* Public pages with Navbar + Footer */}
+      {/* Public pages */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/tours" element={<ToursPage />} />
@@ -24,11 +25,11 @@ function App() {
         <Route path="/contact" element={<div className="p-8 text-center">Contact — coming soon</div>} />
       </Route>
 
-      {/* Auth pages — no layout */}
+      {/* Auth pages */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* Admin pages — AdminLayout + protected */}
+      {/* Admin pages */}
       <Route
         path="/admin"
         element={
@@ -41,7 +42,7 @@ function App() {
         <Route path="tours" element={<div className="p-4 text-slate-500 text-sm">Tour management — coming soon</div>} />
         <Route path="bookings" element={<div className="p-4 text-slate-500 text-sm">Bookings — coming soon</div>} />
         <Route path="customers" element={<div className="p-4 text-slate-500 text-sm">Customers — coming soon</div>} />
-        <Route path="leads" element={<div className="p-4 text-slate-500 text-sm">Leads CRM — coming soon</div>} />
+        <Route path="leads" element={<LeadsPage />} />
         <Route path="reports" element={<div className="p-4 text-slate-500 text-sm">Reports — coming soon</div>} />
         <Route path="settings" element={<div className="p-4 text-slate-500 text-sm">Settings — coming soon</div>} />
       </Route>
