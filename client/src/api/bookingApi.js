@@ -19,3 +19,13 @@ export const cancelBooking = async (id) => {
   const response = await axiosInstance.put(`/bookings/${id}/cancel`)
   return response.data
 }
+
+export const getAllBookingsAdmin = async (params = {}) => {
+  const response = await axiosInstance.get('/bookings', { params })
+  return response.data
+}
+
+export const markBookingAsPaid = async (id) => {
+  const response = await axiosInstance.put(`/bookings/${id}/pay`)
+  return response.data
+}
