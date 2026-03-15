@@ -3,6 +3,7 @@ import MainLayout from './layouts/MainLayout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ToursPage from './pages/ToursPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
@@ -13,7 +14,7 @@ function App() {
       {/* Public pages with Navbar + Footer */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/tours" element={<div className="p-8 text-center">Tours Page — coming soon</div>} />
+        <Route path="/tours" element={<ToursPage />} />
         <Route path="/destinations" element={<div className="p-8 text-center">Destinations — coming soon</div>} />
         <Route path="/about" element={<div className="p-8 text-center">About — coming soon</div>} />
         <Route path="/contact" element={<div className="p-8 text-center">Contact — coming soon</div>} />
