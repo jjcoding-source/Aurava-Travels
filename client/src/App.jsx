@@ -19,6 +19,7 @@ import ReportsPage from './pages/admin/ReportsPage'
 import AgentDashboardPage from './pages/agent/AgentDashboardPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/common/ProtectedRoute'
+import AgentLeadsPage from './pages/agent/AgentLeadsPage'
 
 function App() {
   return (
@@ -87,10 +88,10 @@ function App() {
           <ProtectedRoute allowedRoles={['agent']}>
             <AgentLayout />
           </ProtectedRoute>
-        }
-      >
-        <Route index element={<AgentDashboardPage />} />
-        <Route path="leads" element={<div className="p-4 text-slate-500 text-sm">My Leads — coming soon</div>} />
+       }
+    >
+       <Route index element={<AgentDashboardPage />} />
+       <Route path="leads" element={<AgentLeadsPage />} />
       </Route>
 
       {/* 404 */}
